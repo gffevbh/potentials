@@ -1,3 +1,5 @@
+
+
 from transport_table_cell import TransportTableCell
 from pair_indexes import Pair
 
@@ -75,225 +77,6 @@ def choose_direction(transport_table, beginning_row_index, beginning_col_index, 
 
 
 
-def search_directions(transport_table, polyline):
-    possible_polylines = []
-    for k in range(len(polyline)):
-        if polyline[k][len(polyline[k])-1].first_elem == '*':
-            return polyline
-    print('--------------после 1 итерации------------')
-    print_polyline(polyline)
-
-    for k in range(len(polyline)):
-
-        now_polyline = polyline[k]
-
-        bri = now_polyline[len(now_polyline) - 1].second_elem.first_elem
-        bci = now_polyline[len(now_polyline) - 1].second_elem.second_elem
-        print(f"bri={bri}, bci={bci}, {now_polyline[len(now_polyline) - 1].first_elem}")
-        left = now_polyline
-        right = now_polyline
-        down = now_polyline
-        up = now_polyline
-        print("now_polyline =", now_polyline, k)
-        prev = None
-
-        for i in range(len(transport_table)):
-            for j in range(len(transport_table[i])):
-
-                directions = choose_direction(transport_table, bri, bci, i, j)
-                print(f"bri={bri}, bci={bci}, ({i, j}), {directions}")
-
-                if prev != 0:
-                    if directions[0]:
-                        prev = 0
-                        elem = Pair(transport_table[i][j].x, Pair(i, j))
-
-                        if elem not in now_polyline:
-                            left.append(Pair(transport_table[i][j].x, Pair(i, j)))
-                            possible_polylines.append(left)
-
-                            left = left[0:len(left)-1]
-                            right = right[0:len(right) - 1]
-                            down = down[0:len(down) - 1]
-                            up = up[0:len(up) - 1]
-                            print(left, right, down, up)
-
-                            print("possible polylines, left")
-                            print_polyline(possible_polylines)
-
-                if prev != 1:
-                    if directions[1]:
-                        prev = 1
-                        elem = Pair(transport_table[i][j].x, Pair(i, j))
-                        if elem not in now_polyline:
-
-                            right.append(Pair(transport_table[i][j].x, Pair(i, j)))
-                            possible_polylines.append(right)
-
-                            left = left[0:len(left) - 1]
-                            right = right[0:len(right) - 1]
-                            down = down[0:len(down) - 1]
-                            up = up[0:len(up) - 1]
-                            print(left, right, down, up)
-
-                            print("possible polylines, right")
-                            print_polyline(possible_polylines)
-
-                if prev != 2:
-                    if directions[2]:
-                        prev = 2
-                        elem = Pair(transport_table[i][j].x, Pair(i, j))
-                        if elem not in now_polyline:
-
-                            down.append(Pair(transport_table[i][j].x, Pair(i, j)))
-                            possible_polylines.append(down)
-                            print_polyline(polyline)
-
-                            left = left[0:len(left) - 1]
-                            right = right[0:len(right) - 1]
-                            down = down[0:len(down)-1]
-                            up = up[0:len(up) - 1]
-
-                            print("possible polylines, down")
-                            print_polyline(possible_polylines)
-
-
-                if prev != 3:
-                    if directions[3]:
-                        prev = 3
-                        elem = Pair(transport_table[i][j].x, Pair(i, j))
-                        if elem not in now_polyline:
-
-                            up.append(Pair(transport_table[i][j].x, Pair(i, j)))
-
-                            possible_polylines.append(up)
-                            left = left[0:len(left) - 1]
-                            right = right[0:len(right) - 1]
-                            down = down[0:len(down) - 1]
-                            up = up[0:len(up) - 1]
-
-                            print("possible polylines, up")
-                            print_polyline(possible_polylines)
-
-    print_polyline(possible_polylines)
-
-    #ПРОВЕРКА НА ОДИНАКОВЫЕ ЛОМАНЫЕ
-    p = []
-    for k in range(len(possible_polylines)):
-        count = 0
-        for i in range(len(possible_polylines[k])):
-            for j in range(i+1, len(possible_polylines[k])):
-                if possible_polylines[k][i].first_elem == possible_polylines[k][j].first_elem and possible_polylines[k][i].second_elem.first_elem == possible_polylines[k][j].second_elem.first_elem and possible_polylines[k][i].second_elem.second_elem == possible_polylines[k][j].second_elem.second_elem:
-                    count += 1
-                    break
-        if count == 0:
-            p.append(possible_polylines[k])
-    build_polyline_with_indexes(p)
-
-    #ЕСЛИ МОЖНО ПОПАСТЬ В НАЧАЛЬНЫЙ ЭЛЕМЕНТ - ДОБАВЛЯЕМ ЕГО
-    for k in range(len(p)):
-        if p[k][len(p[k]) - 1].second_elem.first_elem == p[k][0].second_elem.first_elem or p[k][len(p[k]) - 1].second_elem.second_elem == p[k][0].second_elem.second_elem:
-            p[k].append(p[k][0])
-    build_polyline_with_indexes(p)
-
-    # ЕСЛИ В ЛОМАНОЙ 3 АРГУМЕНТА СТОЯТ НА ОДНОЙ СТРОКЕ ИЛИ В ОДНОМ СТОЛБЦЕ - НЕ БЕРЕМ ЕЁ
-    count = 0
-    p1 = []
-    for k in range(len(p)):
-        if len(p[k]) >= 3:
-            for m in range(len(p[k]) - 2):
-                if p[k][m].second_elem.first_elem == p[k][m + 1].second_elem.first_elem == p[k][m + 2].second_elem.first_elem or p[k][m].second_elem.second_elem == p[k][m + 1].second_elem.second_elem == p[k][m + 2].second_elem.second_elem:
-                    count += 1
-        if count == 0:
-            p1.append(p[k])
-        count = 0
-
-    build_polyline_with_indexes(p1)
-    return p1
-
-
-def build_polyline_with_indexes(p1):
-    print('________Ломаные__________')
-
-    for k in range(len(p1)):
-        for m in range(len(p1[k])):
-            if p1[k][m] == '*':
-                print(p1[k][m], end=' ')
-            else:
-                print(
-                    f"{p1[k][m].first_elem, p1[k][m].second_elem.first_elem, p1[k][m].second_elem.second_elem}",
-                    end=' ')
-        print()
-
-def build_polyline(transport_table, beginning_row_index, beginning_col_index):
-    polyline = []
-
-    for i in range(len(transport_table)):
-        for j in range(len(transport_table[i])):
-            print(f"build_polyline: {beginning_row_index, beginning_col_index, i, j}")
-            directions = choose_direction(transport_table, beginning_row_index, beginning_col_index, i, j)
-            print(directions)
-            possible_polyline_left = []
-            possible_polyline_right = []
-            possible_polyline_down = []
-            possible_polyline_up = []
-
-            if directions[0]:
-                possible_polyline_left.append(Pair(transport_table[beginning_row_index][beginning_col_index].x, Pair(beginning_row_index, beginning_col_index)))
-                possible_polyline_left.append(Pair(transport_table[i][j].x, Pair(i, j)))
-                polyline.append(possible_polyline_left)
-                print_polyline(polyline)
-
-            if directions[1]:
-                possible_polyline_right.append(Pair(transport_table[beginning_row_index][beginning_col_index].x, Pair(beginning_row_index, beginning_col_index)))
-                possible_polyline_right.append(Pair(transport_table[i][j].x, Pair(i, j)))
-                polyline.append(possible_polyline_right)
-                print_polyline(polyline)
-
-            if directions[2]:
-                possible_polyline_down.append(Pair(transport_table[beginning_row_index][beginning_col_index].x, Pair(beginning_row_index, beginning_col_index)))
-                possible_polyline_down.append(Pair(transport_table[i][j].x, Pair(i, j)))
-                polyline.append(possible_polyline_down)
-                print_polyline(polyline)
-
-            if directions[3]:
-                possible_polyline_up.append(Pair(transport_table[beginning_row_index][beginning_col_index].x, Pair(beginning_row_index, beginning_col_index)))
-                possible_polyline_up.append(Pair(transport_table[i][j].x, Pair(i, j)))
-                polyline.append(possible_polyline_up)
-                print_polyline(polyline)
-
-    print('_______1 итерация_________')
-    print_polyline(polyline)
-    print("polyline = ", polyline)
-
-    while polyline[0][len(polyline[0])-1].first_elem != '*':
-        polyline = search_directions(transport_table, polyline)
-        print("polyline в цикле while = ")
-        print_polyline(polyline)
-        for i in range(len(polyline)):
-            for j in range(len(polyline[i])):
-                print(f"{polyline[i][0].first_elem, polyline[i][len(polyline[i])-1].first_elem, len(polyline[i])}")
-                if polyline[i][0].first_elem == polyline[i][len(polyline[i])-1].first_elem and len(polyline[i]) >= 5:
-                    return polyline[i]
-
-    print("ОКОНЧАТЕЛЬНАЯ ЛОМАНАЯ")
-    print_polyline(polyline)
-    return polyline[0]
-
-
-
-
-def print_polyline(polyline):
-    print('________Ломаные__________')
-
-    for i in range(len(polyline)):
-        for j in range(len(polyline[i])):
-            if polyline[i][j] == '*':
-                print(polyline[i][j], end=' ')
-            else:
-                print(polyline[i][j].first_elem, end=' ')
-        print()
-
 def sum_transport_table(transport_table):
     summ = 0
     for i in range(len(transport_table)):
@@ -359,20 +142,21 @@ def method_of_potentials(transport_table, supply, demand):
         beginning_col_index = bci[0]
 
         print(f"bri={beginning_row_index}, bci={beginning_col_index}")
-        polyline = build_polyline(a, beginning_row_index, beginning_col_index)
+
+        polyline = [Pair('*', Pair(beginning_row_index, beginning_col_index))]
+        drct = directions(a, beginning_row_index, beginning_col_index)
+        polyline = search_polyline(a, polyline, drct)
+        #polyline = build_polyline(a, beginning_row_index, beginning_col_index)
         minus_values = []
         for k in range(len(polyline)):
             if k % 2 == 1:
                 minus_values.append(polyline[k].first_elem)
 
 
-
         print("minus_values = ", minus_values)
         theta = min(minus_values)
         a[beginning_row_index][beginning_col_index].x = theta
         print(f"minus_values.count(theta) = {minus_values.count(theta)}")
-
-
 
 
         for k in range(1, len(polyline)-1):
@@ -397,22 +181,86 @@ def method_of_potentials(transport_table, supply, demand):
 
     #--------------------------------------------------------------------------------------#
 
+def directions(tt, ri, ci):
+    direct = []
+    for i in range(len(tt)):
+        for j in range(len(tt[i])):
+            d = choose_direction(tt, ri, ci, i, j)
+            if d.count(True) > 0:
+                direct.append(Pair(tt[i][j].x, Pair(i, j)))
+    return direct
+
+def checking_for_elem_in_one_row_or_col(polyline, elem):
+    for k in range(len(polyline)-1):
+        if polyline[k].second_elem.first_elem == polyline[k+1].second_elem.first_elem == elem.second_elem.first_elem or polyline[k].second_elem.second_elem == polyline[k + 1].second_elem.second_elem == elem.second_elem.second_elem:
+            return False
+    return True
+def checking_for_same_elem(polyline, elem):
+    for k in range(len(polyline)):
+        if polyline[k].first_elem == elem.first_elem and polyline[k].second_elem.first_elem == elem.second_elem.first_elem and polyline[k].second_elem.second_elem == elem.second_elem.second_elem:
+            return False
+    return True
+
+
+def search_polyline(tt, polyline, drct):
+    print("polyline: ")
+    print_p(polyline)
+    print(len(polyline))
+    print("directions:")
+    print_p(drct)
+    if len(polyline) >= 4:
+        if polyline[len(polyline)-1].second_elem.first_elem == polyline[0].second_elem.first_elem or polyline[len(polyline)-1].second_elem.second_elem == polyline[0].second_elem.second_elem:
+            polyline.append(Pair(polyline[0].first_elem, Pair(polyline[0].second_elem.first_elem, polyline[0].second_elem.second_elem)))
+            print("когда добавили *")
+            print_p(polyline)
+
+    if len(polyline) >= 4 and polyline[0].first_elem == polyline[len(polyline)-1].first_elem:
+        print(polyline[0].first_elem, polyline[len(polyline)-1].first_elem)
+        print("answer:")
+        print_p(polyline)
+        return polyline
+
+    if len(drct) > 0:
+        if checking_for_elem_in_one_row_or_col(polyline, drct[0]) and checking_for_same_elem(polyline, drct[0]):
+            polyline.append(drct[0])
+            drct = directions(tt, drct[0].second_elem.first_elem, drct[0].second_elem.second_elem)
+            return search_polyline(tt, polyline, drct)
+        else:
+            del drct[0]
+            return search_polyline(tt, polyline, drct)
+    else:
+        del polyline[len(polyline)-1]
+        drct = directions(tt, polyline[len(polyline)-1].second_elem.first_elem, polyline[len(polyline)-1].second_elem.second_elem)
+        del drct[0]
+        return search_polyline(tt, polyline, drct)
+
+
+
+
+
+def print_p(polyline):
+    if len(polyline) == 0:
+        print("[]")
+    else:
+        for k in range(len(polyline)):
+            print(f"{polyline[k].first_elem, polyline[k].second_elem.first_elem, polyline[k].second_elem.second_elem}", end=' ')
+    print('\n_____________________________')
 
 
 if __name__ == '__main__':
-    transport_table = [[5, 2, 4, 1],
-                       [7, 3, 7, 2],
-                       [1, 4, 5, 2]]
+    tt1 = [[5, 2, 4, 1],
+           [7, 3, 7, 2],
+           [1, 4, 5, 2]]
 
-    supply = [25, 16, 20] # предложение
-    demand = [15, 25, 11, 10] # спрос
+    s1 = [25, 16, 20] # предложение
+    d1 = [15, 25, 11, 10] # спрос
 
 
     tt2 = [[2, 7, 2],
            [4, 1, 6],
            [3, 5, 2]]
-    s = [80, 42, 25]
-    d = [61, 12, 74]
+    s2 = [80, 42, 25]
+    d2 = [61, 12, 74]
 
     tt3 = [[8, 6, 4],
            [5, 9, 4],
@@ -421,3 +269,7 @@ if __name__ == '__main__':
     s3 = [18, 20, 27, 15]
     d3 = [20, 20, 40]
     a = method_of_potentials(tt3, s3, d3)
+    #a = northwest_corner_method(tt2, s2, d2)
+
+
+
