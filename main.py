@@ -145,7 +145,7 @@ def method_of_potentials(transport_table, supply, demand):
 
         polyline = [Pair('*', Pair(beginning_row_index, beginning_col_index))]
         drct = directions(a, beginning_row_index, beginning_col_index)
-        polyline = search_polyline(a, polyline, drct)
+        polyline = search_polyline(a, polyline, drct, Pair(-1, Pair(-1, -1)))
         #polyline = build_polyline(a, beginning_row_index, beginning_col_index)
         minus_values = []
         for k in range(len(polyline)):
@@ -202,7 +202,7 @@ def checking_for_same_elem(polyline, elem):
     return True
 
 
-def search_polyline(tt, polyline, drct):
+def search_polyline(tt, polyline, drct, deleted_elem):
     print("polyline: ")
     print_p(polyline)
     print(len(polyline))
@@ -221,18 +221,28 @@ def search_polyline(tt, polyline, drct):
         return polyline
 
     if len(drct) > 0:
+        print("deleted_elem")
+        if deleted_elem is not None:
+            print(deleted_elem.first_elem, deleted_elem.second_elem.first_elem, deleted_elem.second_elem.second_elem)
+            print(len(drct))
+            if drct[0].first_elem == deleted_elem.first_elem and drct[0].second_elem.first_elem == deleted_elem.second_elem.first_elem and drct[0].second_elem.second_elem == deleted_elem.second_elem.second_elem:
+                del drct[0]
         if checking_for_elem_in_one_row_or_col(polyline, drct[0]) and checking_for_same_elem(polyline, drct[0]):
             polyline.append(drct[0])
             drct = directions(tt, drct[0].second_elem.first_elem, drct[0].second_elem.second_elem)
-            return search_polyline(tt, polyline, drct)
+            print("FIRST")
+            return search_polyline(tt, polyline, drct, None)
         else:
             del drct[0]
-            return search_polyline(tt, polyline, drct)
+            print("SECOND")
+            return search_polyline(tt, polyline, drct, None)
     else:
+        deleted_elem = polyline[len(polyline)-1]
         del polyline[len(polyline)-1]
         drct = directions(tt, polyline[len(polyline)-1].second_elem.first_elem, polyline[len(polyline)-1].second_elem.second_elem)
         del drct[0]
-        return search_polyline(tt, polyline, drct)
+        print("THIRD")
+        return search_polyline(tt, polyline, drct, deleted_elem)
 
 
 
@@ -268,7 +278,7 @@ if __name__ == '__main__':
            [3, 1, 5]]
     s3 = [18, 20, 27, 15]
     d3 = [20, 20, 40]
-    a = method_of_potentials(tt3, s3, d3)
+    a = method_of_potentials(tt2, s2, d2)
     #a = northwest_corner_method(tt2, s2, d2)
 
 
