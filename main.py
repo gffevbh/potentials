@@ -1,7 +1,15 @@
 
-
 from transport_table_cell import TransportTableCell
-from pair_indexes import Pair
+from pair import Pair
+
+def print_answer(transport_table):
+    print("ANSWER")
+    for i in range(len(transport_table)):
+        for j in range(len(transport_table[i])):
+            if transport_table[i][j].x != '*':
+                print(f"x*{i+1}{j+1} = {transport_table[i][j].x}")
+    print(f"Z* = {sum_transport_table(transport_table)}")
+    print("__________________________________________")
 
 
 def print_a(a):
@@ -64,16 +72,14 @@ def move_up(transport_table, beginning_row_index, beginning_col_index, final_row
         return False
 
 def choose_direction(transport_table, beginning_row_index, beginning_col_index, final_row_index, final_col_index):
-    directions = [False] * 4
-    if move_left(transport_table, beginning_row_index, beginning_col_index, final_row_index, final_col_index):
-        directions[0] = True
-    if move_right(transport_table, beginning_row_index, beginning_col_index, final_row_index, final_col_index):
-        directions[1] = True
-    if move_down(transport_table, beginning_row_index, beginning_col_index, final_row_index, final_col_index):
-        directions[2] = True
-    if move_up(transport_table, beginning_row_index, beginning_col_index, final_row_index, final_col_index):
-        directions[3] = True
-    return directions
+
+    l = move_left(transport_table, beginning_row_index, beginning_col_index, final_row_index, final_col_index)
+    r = move_right(transport_table, beginning_row_index, beginning_col_index, final_row_index, final_col_index)
+    d = move_down(transport_table, beginning_row_index, beginning_col_index, final_row_index, final_col_index)
+    u = move_up(transport_table, beginning_row_index, beginning_col_index, final_row_index, final_col_index)
+
+    if l or r or d or u:
+        return True
 
 
 
@@ -89,9 +95,6 @@ def sum_transport_table(transport_table):
 def method_of_potentials(transport_table, supply, demand):
 
     a = northwest_corner_method(transport_table, supply, demand)
-    print_a(a)
-
-    #-----------------------------------------------------------------------------------------#
 
     deltas = [-1]
 
@@ -113,10 +116,6 @@ def method_of_potentials(transport_table, supply, demand):
                         elif (alphas[i] == '*' and betas[j] == '*') or (alphas[i] != '*' and betas[j] != '*'):
                             continue
 
-        print("alphas = ", alphas)
-        print("betas = ", betas)
-        print('_______след. итерация________')
-        print_a(a)
 
         deltas = []
         for i in range(len(a)):
@@ -124,14 +123,13 @@ def method_of_potentials(transport_table, supply, demand):
                 if a[i][j].x == '*':
                     deltas.append(a[i][j].c - (alphas[i] + betas[j]))
 
-        print("deltas =", deltas)
+
         if sum(1 for x in deltas if x >= 0) == len(deltas):
             return a
 
         bri = []
         bci = []
         beginning_of_polyline = min(deltas)
-        print(beginning_of_polyline)
         for i in range(len(a)):
             for j in range(len(a[i])):
                 if a[i][j].x == '*' and a[i][j].c - (alphas[i] + betas[j]) == beginning_of_polyline:
@@ -141,22 +139,20 @@ def method_of_potentials(transport_table, supply, demand):
         beginning_row_index = bri[0]
         beginning_col_index = bci[0]
 
-        print(f"bri={beginning_row_index}, bci={beginning_col_index}")
+
 
         polyline = [Pair('*', Pair(beginning_row_index, beginning_col_index))]
-        drct = directions(a, beginning_row_index, beginning_col_index)
+        drct = search_directions(a, beginning_row_index, beginning_col_index)
         polyline = search_polyline(a, polyline, drct, Pair(-1, Pair(-1, -1)))
-        #polyline = build_polyline(a, beginning_row_index, beginning_col_index)
+
         minus_values = []
         for k in range(len(polyline)):
             if k % 2 == 1:
                 minus_values.append(polyline[k].first_elem)
 
 
-        print("minus_values = ", minus_values)
         theta = min(minus_values)
         a[beginning_row_index][beginning_col_index].x = theta
-        print(f"minus_values.count(theta) = {minus_values.count(theta)}")
 
 
         for k in range(1, len(polyline)-1):
@@ -174,19 +170,16 @@ def method_of_potentials(transport_table, supply, demand):
                     a[polyline[k].second_elem.first_elem][polyline[k].second_elem.second_elem].x = 0
                     c = 1
 
+    return a
 
 
-        print_a(a)
-        print("sum =", sum_transport_table(a))
 
-    #--------------------------------------------------------------------------------------#
-
-def directions(tt, ri, ci):
+def search_directions(tt, ri, ci):
     direct = []
     for i in range(len(tt)):
         for j in range(len(tt[i])):
             d = choose_direction(tt, ri, ci, i, j)
-            if d.count(True) > 0:
+            if d:
                 direct.append(Pair(tt[i][j].x, Pair(i, j)))
     return direct
 
@@ -203,50 +196,32 @@ def checking_for_same_elem(polyline, elem):
 
 
 def search_polyline(tt, polyline, drct, deleted_elem):
-    print("polyline: ")
-    print_p(polyline)
-    print(len(polyline))
-    print("directions:")
-    print_p(drct)
+
     if len(polyline) >= 4:
         if polyline[len(polyline)-1].second_elem.first_elem == polyline[0].second_elem.first_elem or polyline[len(polyline)-1].second_elem.second_elem == polyline[0].second_elem.second_elem:
             polyline.append(Pair(polyline[0].first_elem, Pair(polyline[0].second_elem.first_elem, polyline[0].second_elem.second_elem)))
-            print("когда добавили *")
-            print_p(polyline)
+
 
     if len(polyline) >= 4 and polyline[0].first_elem == polyline[len(polyline)-1].first_elem:
-        print(polyline[0].first_elem, polyline[len(polyline)-1].first_elem)
-        print("answer:")
-        print_p(polyline)
         return polyline
 
     if len(drct) > 0:
-        print("deleted_elem")
         if deleted_elem is not None:
-            print(deleted_elem.first_elem, deleted_elem.second_elem.first_elem, deleted_elem.second_elem.second_elem)
-            print(len(drct))
             if drct[0].first_elem == deleted_elem.first_elem and drct[0].second_elem.first_elem == deleted_elem.second_elem.first_elem and drct[0].second_elem.second_elem == deleted_elem.second_elem.second_elem:
                 del drct[0]
         if checking_for_elem_in_one_row_or_col(polyline, drct[0]) and checking_for_same_elem(polyline, drct[0]):
             polyline.append(drct[0])
-            drct = directions(tt, drct[0].second_elem.first_elem, drct[0].second_elem.second_elem)
-            print("FIRST")
+            drct = search_directions(tt, drct[0].second_elem.first_elem, drct[0].second_elem.second_elem)
             return search_polyline(tt, polyline, drct, None)
         else:
             del drct[0]
-            print("SECOND")
             return search_polyline(tt, polyline, drct, None)
     else:
         deleted_elem = polyline[len(polyline)-1]
         del polyline[len(polyline)-1]
-        drct = directions(tt, polyline[len(polyline)-1].second_elem.first_elem, polyline[len(polyline)-1].second_elem.second_elem)
+        drct = search_directions(tt, polyline[len(polyline)-1].second_elem.first_elem, polyline[len(polyline)-1].second_elem.second_elem)
         del drct[0]
-        print("THIRD")
         return search_polyline(tt, polyline, drct, deleted_elem)
-
-
-
-
 
 def print_p(polyline):
     if len(polyline) == 0:
@@ -278,8 +253,13 @@ if __name__ == '__main__':
            [3, 1, 5]]
     s3 = [18, 20, 27, 15]
     d3 = [20, 20, 40]
-    a = method_of_potentials(tt2, s2, d2)
-    #a = northwest_corner_method(tt2, s2, d2)
+
+    print_answer(method_of_potentials(tt1, s1, d1))
+    print_answer(method_of_potentials(tt2, s2, d2))
+    print_answer(method_of_potentials(tt3, s3, d3))
+
+
+
 
 
 
